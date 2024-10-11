@@ -8,7 +8,6 @@ local OldFiles = {}
 local self = {
 		winid	= nil,
 		bufnr	= nil,
-		lock	= 0,
 	}
 
 local M = {}
@@ -250,7 +249,7 @@ end
 ----------------------------------------------------------------
 local add_item = function(fname)
 	-- oldfiles list is currently locked
-	if self.lock == 1 then return end
+	if vim.g.lock_file_history == 1 then return end
 
 	-- Get the full path to the filename
 	local path = vim.fn.fnamemodify(fname, ':p')
@@ -284,14 +283,6 @@ local add_item = function(fname)
 end
 
 ----------------------------------------------------------------
--- lock
-----------------------------------------------------------------
-local lock_history = function(v)
-	print("arg="..v)
-	self.lock = v == 1 and 0 or 1
-end
-
-----------------------------------------------------------------
 -- open_history
 ----------------------------------------------------------------
 local function open_history()
@@ -322,7 +313,6 @@ end
 local function setup_commands()
 	local command = vim.api.nvim_create_user_command
 	command("FileHistory", open_history, { nargs = 0 })
-	command("FileHistoryLock", function(args) lock_history(args.args) end, { nargs = 1 })
 end
 
 ----------------------------------------------------------------
@@ -391,6 +381,7 @@ function M.setup()
 	setup_autocommands()
 	setup_commands()
 	setup_oldfile()
+	vim.g.lock_file_history = 0
 end
 
 return M
