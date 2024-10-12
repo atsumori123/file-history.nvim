@@ -1,5 +1,5 @@
 -- separator
-local SEPARATOR = vim.fn.has('win32') and "\\" or "/"
+local SEPARATOR = vim.fn.has('win32') == 1 and "\\" or "/"
 -- History file
 local HISTORY_FILE = ""
 -- old files
@@ -46,8 +46,8 @@ end
 -- get_filename
 ----------------------------------------------------------------
 local function get_filename(path)
-	str = string.reverse(path)
-	idx = string.find(str, SEPARATOR)
+	local str = string.reverse(path)
+	local idx = string.find(str, SEPARATOR)
 	str = string.sub(str, 0, idx - 1)
 	return string.reverse(str)
 end
@@ -113,7 +113,7 @@ local function draw_buffer()
 	-- make display format
 	local output = {}
 	for k,v in pairs(OldFiles) do
-		table.insert(output, " "..get_filename(v).." ("..v..")")
+		table.insert(output, " "..get_filename(v).."  ("..v..")")
 	end
 
 	-- draw buffer
@@ -167,9 +167,9 @@ local function delete_item_from_file_history()
 end
 
 ----------------------------------------------------------------
--- remove_non_existing_item_from_oldfiles
+-- remove_non_existing_item_from_history
 ----------------------------------------------------------------
-local function remove_non_existing_item_from_oldfiles()
+local function remove_non_existing_item_from_history()
 	read_file_history()
 	local backup = OldFiles
 
@@ -199,13 +199,14 @@ local function get_window_opts()
 	local row = math.ceil(vim.o.lines - height) * 0.5 - 1
 	local col = math.ceil(vim.o.columns - width) * 0.5 - 1
 
-	return {title = " file history ",
-			relative = "editor",
-			height = height,
-			width = width,
-			col = col,
-			row = row,
-			border = "single",}
+	return {title	= " file history ",
+			style	= "minimal",
+			relative= "editor",
+			height	= height,
+			width	= width,
+			col		= col,
+			row		= row,
+			border	= "single",}
 end
 
 ----------------------------------------------------------------
@@ -241,7 +242,7 @@ local function open_window()
 	vim.keymap.set('n', 'f', function() filtering_item() end, opts)
 	vim.keymap.set('n', 'd', function() delete_item_from_file_history() end, opts)
 	vim.keymap.set('n', 'q', function() close() end, opts)
-	vim.keymap.set('n', 'clean', function() remove_non_existing_item_from_oldfiles() end, opts)
+	vim.keymap.set('n', 'clean', function() remove_non_existing_item_from_history() end, opts)
 end
 
 ----------------------------------------------------------------
@@ -316,13 +317,13 @@ local function setup_commands()
 end
 
 ----------------------------------------------------------------
--- setup_oldfile
+-- setup_file_history
 ----------------------------------------------------------------
-local function setup_oldfile()
-    if vim.fn.has('uinx') == 1 or vim.fn.has('macunix') == 1 then
+local function setup_file_history()
+     if vim.fn.has('unix') == 1 or vim.fn.has('macunix') == 1 then
 		 HISTORY_FILE = vim.env.HOME.."/.file_history"
 	else
-		if vim.fn.has('win32') and vim.env.USERPROFILE ~= '' then
+		if vim.fn.has('win32') == 1 and vim.env.USERPROFILE ~= nil and vim.env.USERPROFILE ~= '' then
 			HISTORY_FILE = vim.env.USERPROFILE..[[\_file_history]]
 		else
 			HISTORY_FILE = vim.env.VIM.."/_file_history"
@@ -380,7 +381,7 @@ end
 function M.setup()
 	setup_autocommands()
 	setup_commands()
-	setup_oldfile()
+	setup_file_history()
 	vim.g.lock_file_history = 0
 end
 
